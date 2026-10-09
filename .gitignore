@@ -12,15 +12,20 @@ replay_pid*
 *.iml
 *.iws
 out/
+*.ipr
 
 # Maven
 
 target/
+!**/src/main/**/target/
+!**/src/test/**/target/
 
 # Gradle
 
 .gradle/
 build/
+!**/src/main/**/build/
+!**/src/test/**/build/
 
 # Spring Boot - local config
 
