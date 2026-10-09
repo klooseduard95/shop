@@ -15,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class OrderInput {
     private LocalDateTime createdAt;
-    private UUID orderId;
+    private UUID userId;
     private Address deliveryAddress;
     private Map<UUID, Integer> productQuantities;
 }
