@@ -39,7 +39,7 @@ CREATE TABLE product_details
 (
     product_id  UUID PRIMARY KEY REFERENCES products(id),
     description TEXT,
-    image_url   VARCHAR(255)
+    image       BYTEA
 );
 
 CREATE TABLE locations
