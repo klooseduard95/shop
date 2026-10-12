@@ -4,7 +4,6 @@ import org.springframework.stereotype.Component;
 import ro.msg.learning.shop.dto.request.ProductRequest;
 import ro.msg.learning.shop.dto.response.ProductResponse;
 import ro.msg.learning.shop.model.Product;
-import ro.msg.learning.shop.model.ProductCategory;
 
 @Component
 public class ProductMapper {

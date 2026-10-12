@@ -1,12 +1,9 @@
 package ro.msg.learning.shop.mapper;
 
 import org.springframework.stereotype.Component;
-import ro.msg.learning.shop.dto.request.OrderCreateRequest;
-import ro.msg.learning.shop.dto.request.ProductQuantityRequest;
+import ro.msg.learning.shop.dto.request.*;
 import ro.msg.learning.shop.dto.response.OrderResponse;
-import ro.msg.learning.shop.model.Address;
-import ro.msg.learning.shop.model.Order;
-import ro.msg.learning.shop.model.OrderInput;
+import ro.msg.learning.shop.model.*;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;

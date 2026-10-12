@@ -3,8 +3,7 @@ package ro.msg.learning.shop.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ro.msg.learning.shop.exception.NoSuitableLocationException;
-import ro.msg.learning.shop.exception.ResourceNotFoundException;
+import ro.msg.learning.shop.exception.*;
 import ro.msg.learning.shop.model.*;
 import ro.msg.learning.shop.repository.*;
 
