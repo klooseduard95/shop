@@ -8,6 +8,8 @@ import ro.msg.learning.shop.exception.ResourceNotFoundException;
 import ro.msg.learning.shop.model.*;
 import ro.msg.learning.shop.repository.*;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 
@@ -22,6 +24,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
+    private final Clock clock;
 
     @Transactional
     public Order createOrder(OrderInput input) {
@@ -63,7 +66,7 @@ public class OrderService {
         return orderRepository.save(Order.builder()
                 .user(user)
                 .deliveryAddress(address)
-                .createdAt(input.getCreatedAt())
+                .createdAt(LocalDateTime.now(clock))
                 .build());
     }
 

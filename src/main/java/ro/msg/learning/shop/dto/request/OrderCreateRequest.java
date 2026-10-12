@@ -1,13 +1,13 @@
 package ro.msg.learning.shop.dto.request;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,8 +16,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderCreateRequest {
-    @NotNull(message = "Created at is required")
-    private LocalDateTime createdAt;
 
     @NotNull(message = "User ID is required")
     private UUID userId;
@@ -27,6 +25,6 @@ public class OrderCreateRequest {
     private AddressRequest deliveryAddress;
 
     @Valid
-    @NotNull(message = "Orders must contain at least one product")
+    @NotEmpty(message = "Orders must contain at least one product")
     private List<ProductQuantityRequest> products;
 }

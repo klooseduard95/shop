@@ -11,7 +11,7 @@ import ro.msg.learning.shop.model.OrderInput;
 import java.util.stream.Collectors;
 
 @Component
-public class OderMapper {
+public class OrderMapper {
 
     public OrderInput toModel(OrderCreateRequest request) {
         Address address = Address.builder()
@@ -24,11 +24,11 @@ public class OderMapper {
         var productQuantitiesMap = request.getProducts().stream()
                 .collect(Collectors.toMap(
                         ProductQuantityRequest::getProductId,
-                        ProductQuantityRequest::getQuantity
+                        ProductQuantityRequest::getQuantity,
+                        Integer::sum
                 ));
 
         return OrderInput.builder()
-                .createdAt(request.getCreatedAt())
                 .userId(request.getUserId())
                 .deliveryAddress(address)
                 .productQuantities(productQuantitiesMap)

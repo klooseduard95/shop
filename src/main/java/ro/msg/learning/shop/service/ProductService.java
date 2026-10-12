@@ -7,48 +7,60 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ro.msg.learning.shop.exception.ResourceNotFoundException;
 import ro.msg.learning.shop.model.Product;
+import ro.msg.learning.shop.model.ProductCategory;
+import ro.msg.learning.shop.repository.ProductCategoryRepository;
 import ro.msg.learning.shop.repository.ProductRepository;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ProductService {
-    private final ProductRepository productRepository;
 
-    @Transactional(readOnly = true)
+    private final ProductRepository productRepository;
+    private final ProductCategoryRepository categoryRepository;
+
     public Page<Product> findAll(Pageable pageable) {
         return productRepository.findAll(pageable);
     }
 
-    @Transactional(readOnly = true)
     public Product findById(UUID id) {
         return getProductOrThrow(id);
     }
 
-    private Product getProductOrThrow(UUID id) {
-        return productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException( "Product not found with id: " + id));
-    }
-
     @Transactional
-    public Product create(Product product) {
+    public Product create(Product product, UUID categoryId) {
+        ProductCategory category = getCategoryOrThrow(categoryId);
+        product.setCategory(category);
         return productRepository.save(product);
     }
 
     @Transactional
-    public Product update(UUID id, Product updatedProduct) {
+    public Product update(UUID id, Product updatedData, UUID categoryId) {
         Product existing = getProductOrThrow(id);
-        existing.setName(updatedProduct.getName());
-        existing.setPrice(updatedProduct.getPrice());
-        existing.setWeight(updatedProduct.getWeight());
-        existing.setCategory(updatedProduct.getCategory());
-        return productRepository.save(existing);
+        ProductCategory category = getCategoryOrThrow(categoryId);
+
+        existing.setName(updatedData.getName());
+        existing.setPrice(updatedData.getPrice());
+        existing.setWeight(updatedData.getWeight());
+        existing.setCategory(category);
+
+        return existing; // flushed by dirty checking at commit
     }
 
     @Transactional
     public void delete(UUID id) {
-        Product product = getProductOrThrow(id);
-        productRepository.delete(product);
+        productRepository.delete(getProductOrThrow(id));
+    }
+
+    private Product getProductOrThrow(UUID id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+    }
+
+    private ProductCategory getCategoryOrThrow(UUID id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
     }
 }

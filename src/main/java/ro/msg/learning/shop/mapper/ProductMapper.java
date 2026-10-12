@@ -24,16 +24,14 @@ public class ProductMapper {
                 .build();
     }
 
-    public Product toModel(ProductRequest dto, ProductCategory category) {
+    public Product toModel(ProductRequest dto) {
         if (dto == null) {
             return null;
         }
-
         return Product.builder()
                 .name(dto.getName())
                 .price(dto.getPrice())
                 .weight(dto.getWeight())
-                .category(category)
                 .build();
     }
 }
