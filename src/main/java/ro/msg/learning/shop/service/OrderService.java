@@ -80,18 +80,13 @@ public class OrderService {
     private List<Stock> selectStocksFromSingleLocation(Map<UUID, Integer> requested) {
         List<Stock> stocks = stockRepository.findByProductIdInOrderByLocation_IdAsc(List.copyOf(requested.keySet()));
 
-        var byLocation = stocks.stream()
-                .collect(groupingBy(s -> s.getLocation().getId(), TreeMap::new, toList()));
-
-        return byLocation.values().stream()
+        return stocks.stream()
+                .collect(groupingBy(s -> s.getLocation().getId(), LinkedHashMap::new, toList()))
+                .values().stream()
                 .filter(locationStocks -> canFulfill(locationStocks, requested))
                 .findFirst()
-                .orElseGet(() -> {
-                    log.warn("No suitable location found for order: requestedProductCount={}, candidateLocationCount={}",
-                            requested.size(), byLocation.size());
-                    throw new NoSuitableLocationException(
-                            "No single location can fulfil the order: " + requested);
-                });
+                .orElseThrow(() -> new NoSuitableLocationException(
+                        "No single location can fulfil the order: " + requested));
     }
 
     private boolean canFulfill(List<Stock> locationStocks, Map<UUID, Integer> requested) {

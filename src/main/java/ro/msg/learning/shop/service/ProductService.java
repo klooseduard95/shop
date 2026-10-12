@@ -48,7 +48,7 @@ public class ProductService {
         existing.setCategory(category);
 
         log.info("Product updated: productId={}, categoryId={}", id, categoryId);
-        return existing; // flushed by dirty checking at commit
+        return existing;
     }
 
     @Transactional

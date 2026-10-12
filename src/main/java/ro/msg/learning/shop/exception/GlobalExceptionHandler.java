@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
         return ErrorResponse.of(ex.getMessage());
     }
 
-    @ExceptionHandler({NoSuitableLocationException.class, InsufficientStockException.class})
+    @ExceptionHandler(NoSuitableLocationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleStockProblems(RuntimeException ex) {
         return ErrorResponse.of(ex.getMessage());
