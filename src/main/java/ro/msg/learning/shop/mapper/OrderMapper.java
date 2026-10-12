@@ -8,12 +8,13 @@ import ro.msg.learning.shop.model.Address;
 import ro.msg.learning.shop.model.Order;
 import ro.msg.learning.shop.model.OrderInput;
 
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @Component
 public class OrderMapper {
 
-    public OrderInput toModel(OrderCreateRequest request) {
+    public OrderInput toModel(OrderCreateRequest request, LocalDateTime createdAt) {
         Address address = Address.builder()
                 .country(request.getDeliveryAddress().getCountry())
                 .city(request.getDeliveryAddress().getCity())
@@ -29,6 +30,7 @@ public class OrderMapper {
                 ));
 
         return OrderInput.builder()
+                .createdAt(createdAt)
                 .userId(request.getUserId())
                 .deliveryAddress(address)
                 .productQuantities(productQuantitiesMap)

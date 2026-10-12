@@ -8,8 +8,6 @@ import ro.msg.learning.shop.exception.ResourceNotFoundException;
 import ro.msg.learning.shop.model.*;
 import ro.msg.learning.shop.repository.*;
 
-import java.time.Clock;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 
@@ -24,7 +22,6 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
-    private final Clock clock;
 
     @Transactional
     public Order createOrder(OrderInput input) {
@@ -66,7 +63,7 @@ public class OrderService {
         return orderRepository.save(Order.builder()
                 .user(user)
                 .deliveryAddress(address)
-                .createdAt(LocalDateTime.now(clock))
+                .createdAt(input.getCreatedAt())
                 .build());
     }
 
@@ -80,7 +77,7 @@ public class OrderService {
         List<Stock> stocks = stockRepository.findByProductIdInOrderByLocation_IdAsc(List.copyOf(requested.keySet()));
 
         return stocks.stream()
-                .collect(groupingBy(s -> s.getLocation().getId(), LinkedHashMap::new, toList()))
+                .collect(groupingBy(s -> s.getLocation().getId(), TreeMap::new, toList()))
                 .values().stream()
                 .filter(locationStocks -> canFulfill(locationStocks, requested))
                 .findFirst()

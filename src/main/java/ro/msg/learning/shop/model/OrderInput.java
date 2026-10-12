@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -13,6 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderInput {
+    private LocalDateTime createdAt;
     private UUID userId;
     private Address deliveryAddress;
     private Map<UUID, Integer> productQuantities;

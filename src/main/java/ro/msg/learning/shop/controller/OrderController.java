@@ -8,7 +8,11 @@ import ro.msg.learning.shop.dto.request.OrderCreateRequest;
 import ro.msg.learning.shop.dto.response.OrderResponse;
 import ro.msg.learning.shop.mapper.OrderMapper;
 import ro.msg.learning.shop.model.Order;
+import ro.msg.learning.shop.model.OrderInput;
 import ro.msg.learning.shop.service.OrderService;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -17,11 +21,12 @@ public class OrderController {
 
     private final OrderService orderService;
     private final OrderMapper orderMapper;
+    private final Clock clock;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OrderResponse createOrder(@Valid @RequestBody OrderCreateRequest request) {
-        Order order = orderService.createOrder(orderMapper.toModel(request));
-        return orderMapper.toResponse(order);
+        OrderInput input = orderMapper.toModel(request, LocalDateTime.now(clock));
+        return orderMapper.toResponse(orderService.createOrder(input));
     }
 }
