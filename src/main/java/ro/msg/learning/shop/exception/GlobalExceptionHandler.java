@@ -1,33 +1,40 @@
 package ro.msg.learning.shop.exception;
 
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
+import static java.util.stream.Collectors.toMap;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleResourceNotFound(ResourceNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleResourceNotFound(ResourceNotFoundException ex) {
+        return ErrorResponse.of(ex.getMessage());
     }
 
-    @ExceptionHandler(NoSuitableLocationException.class)
-    public ResponseEntity<Map<String, String>> handleNoSuitableLocation(NoSuitableLocationException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
+    @ExceptionHandler({NoSuitableLocationException.class, InsufficientStockException.class})
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleStockProblems(RuntimeException ex) {
+        return ErrorResponse.of(ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage()));
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleValidation(MethodArgumentNotValidException ex) {
+        Map<String, String> details = ex.getBindingResult().getFieldErrors().stream()
+                .collect(toMap(
+                        FieldError::getField,
+                        error -> Objects.requireNonNullElse(error.getDefaultMessage(), "invalid"),
+                        (first, second) -> first));
+        return new ErrorResponse("Validation failed", details);
     }
 }
