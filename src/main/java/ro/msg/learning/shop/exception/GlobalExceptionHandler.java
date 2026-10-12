@@ -1,5 +1,6 @@
 package ro.msg.learning.shop.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -8,12 +9,14 @@ import java.util.*;
 
 import static java.util.stream.Collectors.toMap;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleResourceNotFound(ResourceNotFoundException ex) {
+        log.warn("Resource not found: {}", ex.getMessage());
         return ErrorResponse.of(ex.getMessage());
     }
 
@@ -31,6 +34,14 @@ public class GlobalExceptionHandler {
                         FieldError::getField,
                         error -> Objects.requireNonNullElse(error.getDefaultMessage(), "invalid"),
                         (first, second) -> first));
+        log.debug("Validation failed: fieldErrorCount={}", details.size());
         return new ErrorResponse("Validation failed", details);
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleUnexpected(Exception ex) {
+        log.error("Unexpected error while processing request", ex);
+        return ErrorResponse.of("An unexpected error occurred");
     }
 }

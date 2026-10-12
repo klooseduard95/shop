@@ -1,6 +1,7 @@
 package ro.msg.learning.shop.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ro.msg.learning.shop.exception.*;
@@ -12,6 +13,7 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -36,6 +38,7 @@ public class OrderService {
 
         Order order = saveOrder(user, input);
         orderDetailRepository.saveAll(buildOrderDetails(order, location, requested, products));
+        log.info("Order created: orderId={}, userId={}, locationId={}, itemCount={}", order.getId(), user.getId(), location.getId(), requested.size());
 
         return order;
     }
@@ -70,18 +73,25 @@ public class OrderService {
         stocks.forEach(stock ->
                 stock.setQuantity(stock.getQuantity() - requested.get(stock.getProduct().getId())));
         stockRepository.saveAll(stocks);
+        log.debug("Decreased stock for {} product(s) at locationId={}",
+                stocks.size(), stocks.isEmpty() ? null : stocks.getFirst().getLocation().getId());
     }
 
     private List<Stock> selectStocksFromSingleLocation(Map<UUID, Integer> requested) {
         List<Stock> stocks = stockRepository.findByProductIdInOrderByLocation_IdAsc(List.copyOf(requested.keySet()));
 
-        return stocks.stream()
-                .collect(groupingBy(s -> s.getLocation().getId(), TreeMap::new, toList()))
-                .values().stream()
+        var byLocation = stocks.stream()
+                .collect(groupingBy(s -> s.getLocation().getId(), TreeMap::new, toList()));
+
+        return byLocation.values().stream()
                 .filter(locationStocks -> canFulfill(locationStocks, requested))
                 .findFirst()
-                .orElseThrow(() -> new NoSuitableLocationException(
-                        "No single location can fulfil the order: " + requested));
+                .orElseGet(() -> {
+                    log.warn("No suitable location found for order: requestedProductCount={}, candidateLocationCount={}",
+                            requested.size(), byLocation.size());
+                    throw new NoSuitableLocationException(
+                            "No single location can fulfil the order: " + requested);
+                });
     }
 
     private boolean canFulfill(List<Stock> locationStocks, Map<UUID, Integer> requested) {

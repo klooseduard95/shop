@@ -1,6 +1,7 @@
 package ro.msg.learning.shop.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import ro.msg.learning.shop.repository.*;
 
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -30,7 +32,9 @@ public class ProductService {
     public Product create(Product product, UUID categoryId) {
         ProductCategory category = getCategoryOrThrow(categoryId);
         product.setCategory(category);
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+        log.info("Product created: productId={}, categoryId={}", saved.getId(), categoryId);
+        return saved;
     }
 
     @Transactional
@@ -43,12 +47,14 @@ public class ProductService {
         existing.setWeight(updatedData.getWeight());
         existing.setCategory(category);
 
+        log.info("Product updated: productId={}, categoryId={}", id, categoryId);
         return existing; // flushed by dirty checking at commit
     }
 
     @Transactional
     public void delete(UUID id) {
         productRepository.delete(getProductOrThrow(id));
+        log.info("Product deleted: productId={}", id);
     }
 
     private Product getProductOrThrow(UUID id) {
