@@ -7,10 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import ro.msg.learning.shop.dto.request.OrderCreateRequest;
 import ro.msg.learning.shop.dto.response.OrderResponse;
 import ro.msg.learning.shop.mapper.OrderMapper;
-import ro.msg.learning.shop.model.OrderInput;
 import ro.msg.learning.shop.service.OrderService;
-
-import java.time.*;
+import ro.msg.learning.shop.service.command.OrderInput;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -19,12 +17,11 @@ public class OrderController {
 
     private final OrderService orderService;
     private final OrderMapper orderMapper;
-    private final Clock clock;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OrderResponse createOrder(@Valid @RequestBody OrderCreateRequest request) {
-        OrderInput input = orderMapper.toModel(request, LocalDateTime.now(clock));
+        OrderInput input = orderMapper.toOrderInput(request);
         return orderMapper.toResponse(orderService.createOrder(input));
     }
 }

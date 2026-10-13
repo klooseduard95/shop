@@ -7,7 +7,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ro.msg.learning.shop.exception.*;
 import ro.msg.learning.shop.model.*;
 import ro.msg.learning.shop.repository.*;
+import ro.msg.learning.shop.service.command.OrderInput;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 
@@ -23,12 +26,13 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
+    private final Clock clock;
 
     @Transactional
     public Order createOrder(OrderInput input) {
-        Map<UUID, Integer> requested = input.getProductQuantities();
+        Map<UUID, Integer> requested = input.productQuantities();
 
-        User user = findUser(input.getUserId());
+        User user = findUser(input.userId());
         Map<UUID, Product> products = findProducts(requested.keySet());
 
         List<Stock> stocks = selectStocksFromSingleLocation(requested);
@@ -43,7 +47,7 @@ public class OrderService {
         return order;
     }
 
-    private Iterable<OrderDetail> buildOrderDetails(Order order, Location location, Map<UUID, Integer> requested, Map<UUID, Product> products) {
+    private List<OrderDetail> buildOrderDetails(Order order, Location location, Map<UUID, Integer> requested, Map<UUID, Product> products) {
         return requested.entrySet().stream()
                 .map(e -> {
                     Product product = products.get(e.getKey());
@@ -60,12 +64,12 @@ public class OrderService {
     }
 
     private Order saveOrder(User user, OrderInput input) {
-        Address address = addressRepository.save(input.getDeliveryAddress());
+        Address address = addressRepository.save(input.deliveryAddress());
 
         return orderRepository.save(Order.builder()
                 .user(user)
                 .deliveryAddress(address)
-                .createdAt(input.getCreatedAt())
+                .createdAt(LocalDateTime.now(clock))
                 .build());
     }
 
@@ -73,8 +77,6 @@ public class OrderService {
         stocks.forEach(stock ->
                 stock.setQuantity(stock.getQuantity() - requested.get(stock.getProduct().getId())));
         stockRepository.saveAll(stocks);
-        log.debug("Decreased stock for {} product(s) at locationId={}",
-                stocks.size(), stocks.isEmpty() ? null : stocks.getFirst().getLocation().getId());
     }
 
     private List<Stock> selectStocksFromSingleLocation(Map<UUID, Integer> requested) {
@@ -112,6 +114,6 @@ public class OrderService {
 
     private User findUser(UUID userId) {
         return userRepository.findById(userId)
-                .orElseThrow(()->new ResourceNotFoundException("User not found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
     }
 }

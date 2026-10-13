@@ -1,17 +1,19 @@
 package ro.msg.learning.shop.mapper;
 
 import org.springframework.stereotype.Component;
-import ro.msg.learning.shop.dto.request.*;
+import ro.msg.learning.shop.dto.request.OrderCreateRequest;
+import ro.msg.learning.shop.dto.request.ProductQuantityRequest;
 import ro.msg.learning.shop.dto.response.OrderResponse;
-import ro.msg.learning.shop.model.*;
+import ro.msg.learning.shop.model.Address;
+import ro.msg.learning.shop.model.Order;
+import ro.msg.learning.shop.service.command.OrderInput;
 
-import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @Component
 public class OrderMapper {
 
-    public OrderInput toModel(OrderCreateRequest request, LocalDateTime createdAt) {
+    public OrderInput toOrderInput(OrderCreateRequest request) {
         Address address = Address.builder()
                 .country(request.getDeliveryAddress().getCountry())
                 .city(request.getDeliveryAddress().getCity())
@@ -26,12 +28,11 @@ public class OrderMapper {
                         Integer::sum
                 ));
 
-        return OrderInput.builder()
-                .createdAt(createdAt)
-                .userId(request.getUserId())
-                .deliveryAddress(address)
-                .productQuantities(productQuantitiesMap)
-                .build();
+        return new OrderInput(
+                request.getUserId(),
+                address,
+                productQuantitiesMap
+        );
     }
 
     public OrderResponse toResponse(Order order) {
