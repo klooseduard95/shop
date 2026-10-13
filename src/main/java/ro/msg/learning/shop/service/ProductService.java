@@ -2,12 +2,15 @@ package ro.msg.learning.shop.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ro.msg.learning.shop.exception.ResourceNotFoundException;
-import ro.msg.learning.shop.model.*;
-import ro.msg.learning.shop.repository.*;
+import ro.msg.learning.shop.model.Product;
+import ro.msg.learning.shop.model.ProductCategory;
+import ro.msg.learning.shop.repository.ProductCategoryRepository;
+import ro.msg.learning.shop.repository.ProductRepository;
 
 import java.util.UUID;
 

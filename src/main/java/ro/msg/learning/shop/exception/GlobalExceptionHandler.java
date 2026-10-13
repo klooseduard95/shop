@@ -5,7 +5,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-import java.util.*;
+
+import java.util.Map;
+import java.util.Objects;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -22,7 +24,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoSuitableLocationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleStockProblems(RuntimeException ex) {
+    public ErrorResponse handleStockProblems(NoSuitableLocationException ex) {
         return ErrorResponse.of(ex.getMessage());
     }
 
