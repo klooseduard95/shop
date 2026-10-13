@@ -11,4 +11,5 @@ import java.util.*;
 public interface StockRepository extends JpaRepository<Stock, StockId> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Stock> findByProductIdInOrderByLocation_IdAsc(Collection<UUID> productIds);
+    Optional<Stock> findByProductIdAndLocationId(UUID productId, UUID locationId);
 }

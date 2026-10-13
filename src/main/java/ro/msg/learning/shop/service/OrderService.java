@@ -4,18 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ro.msg.learning.shop.exception.NoSuitableLocationException;
 import ro.msg.learning.shop.exception.ResourceNotFoundException;
 import ro.msg.learning.shop.model.*;
 import ro.msg.learning.shop.repository.*;
 import ro.msg.learning.shop.service.command.OrderInput;
+import ro.msg.learning.shop.service.strategy.LocationStrategy;
+import ro.msg.learning.shop.service.strategy.ShipmentItem;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Function;
-
-import static java.util.stream.Collectors.*;
 
 @Slf4j
 @Service
@@ -28,39 +26,45 @@ public class OrderService {
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
     private final Clock clock;
+    private final LocationStrategy locationStrategy;
 
     @Transactional
     public Order createOrder(OrderInput input) {
         Map<UUID, Integer> requested = input.productQuantities();
 
         User user = findUser(input.userId());
-        Map<UUID, Product> products = findProducts(requested.keySet());
+        ensureProductsExist(requested.keySet());
 
-        List<Stock> stocks = selectStocksFromSingleLocation(requested);
-        Location location = stocks.getFirst().getLocation();
-
-        decreaseStock(stocks, requested);
+        List<ShipmentItem> shipment = locationStrategy.findShipmentItems(requested);
+        decreaseStock(shipment);
 
         Order order = saveOrder(user, input);
-        orderDetailRepository.saveAll(buildOrderDetails(order, location, requested, products));
-        log.info("Order created: orderId={}, userId={}, locationId={}, itemCount={}", order.getId(), user.getId(), location.getId(), requested.size());
+        orderDetailRepository.saveAll(buildOrderDetails(order, shipment));
+        log.info("Order created: orderId={}, userId={}, itemCount={}", order.getId(), user.getId(), requested.size());
 
         return order;
     }
 
-    private List<OrderDetail> buildOrderDetails(Order order, Location location, Map<UUID, Integer> requested, Map<UUID, Product> products) {
-        return requested.entrySet().stream()
-                .map(e -> {
-                    Product product = products.get(e.getKey());
-                    return OrderDetail.builder()
-                            .id(new OrderDetailId(order.getId(), product.getId()))
-                            .order(order)
-                            .product(product)
-                            .shippedFrom(location)
-                            .quantity(e.getValue())
-                            .purchasedPrice(product.getPrice())
-                            .build();
-                })
+    private void ensureProductsExist(Set<UUID> productIds) {
+        Set<UUID> missing = new HashSet<>(productIds);
+        productRepository.findAllById(productIds).forEach(
+                p -> missing.remove(p.getId())
+        );
+        if (!missing.isEmpty()) {
+            throw new ResourceNotFoundException("Products not found with ids: " + missing);
+        }
+    }
+
+    private List<OrderDetail> buildOrderDetails(Order order, List<ShipmentItem> shipment) {
+        return shipment.stream()
+                .map(item ->OrderDetail.builder()
+                        .id(new OrderDetailId(order.getId(), item.product().getId()))
+                        .order(order)
+                        .product(item.product())
+                        .shippedFrom(item.location())
+                        .quantity(item.quantity())
+                        .purchasedPrice(item.product().getPrice())
+                        .build())
                 .toList();
     }
 
@@ -74,43 +78,13 @@ public class OrderService {
                 .build());
     }
 
-    private void decreaseStock(List<Stock> stocks, Map<UUID, Integer> requested) {
-        stocks.forEach(stock ->
-                stock.setQuantity(stock.getQuantity() - requested.get(stock.getProduct().getId())));
-        stockRepository.saveAll(stocks);
-    }
-
-    private List<Stock> selectStocksFromSingleLocation(Map<UUID, Integer> requested) {
-        List<Stock> stocks = stockRepository.findByProductIdInOrderByLocation_IdAsc(List.copyOf(requested.keySet()));
-
-        return stocks.stream()
-                .collect(groupingBy(s -> s.getLocation().getId(), LinkedHashMap::new, toList()))
-                .values().stream()
-                .filter(locationStocks -> canFulfill(locationStocks, requested))
-                .findFirst()
-                .orElseThrow(() -> new NoSuitableLocationException(
-                        "No single location can fulfil the order: " + requested));
-    }
-
-    private boolean canFulfill(List<Stock> locationStocks, Map<UUID, Integer> requested) {
-        Map<UUID, Integer> available = locationStocks.stream()
-                .collect(toMap(s -> s.getProduct().getId(), Stock::getQuantity));
-
-        return requested.entrySet().stream()
-                .allMatch(e -> available.getOrDefault(e.getKey(), 0) >= e.getValue());
-    }
-
-    private Map<UUID, Product> findProducts(Set<UUID> productIds) {
-        Map<UUID, Product> products = productRepository.findAllById(productIds).stream()
-                .collect(toMap(Product::getId, Function.identity()));
-
-        Set<UUID> missing = new HashSet<>(productIds);
-        missing.removeAll(products.keySet());
-        if (!missing.isEmpty()) {
-            throw new ResourceNotFoundException("Products not found with ids: " + missing);
-        }
-
-        return products;
+    private void decreaseStock(List<ShipmentItem> shipment) {
+        shipment.forEach(item -> {
+            Stock stock = stockRepository
+                    .findByProductIdAndLocationId(item.product().getId(), item.location().getId())
+                    .orElseThrow(() -> new IllegalStateException("Stock not found for product " + item.product().getId() + " at location " + item.location().getId()));
+            stock.setQuantity(stock.getQuantity() - item.quantity());
+        });
     }
 
     private User findUser(UUID userId) {
