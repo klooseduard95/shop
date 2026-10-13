@@ -80,9 +80,7 @@ public class OrderService {
 
     private void decreaseStock(List<ShipmentItem> shipment) {
         shipment.forEach(item -> {
-            Stock stock = stockRepository
-                    .findByProductIdAndLocationId(item.product().getId(), item.location().getId())
-                    .orElseThrow(() -> new IllegalStateException("Stock not found for product " + item.product().getId() + " at location " + item.location().getId()));
+            Stock stock = item.stock();
             stock.setQuantity(stock.getQuantity() - item.quantity());
         });
     }

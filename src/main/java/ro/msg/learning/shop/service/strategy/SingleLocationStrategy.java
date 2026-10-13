@@ -1,7 +1,6 @@
 package ro.msg.learning.shop.service.strategy;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import ro.msg.learning.shop.exception.NoSuitableLocationException;
 import ro.msg.learning.shop.model.Stock;
 import ro.msg.learning.shop.repository.StockRepository;
@@ -11,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static java.util.Locale.filter;
 import static java.util.stream.Collectors.*;
 
 @RequiredArgsConstructor
@@ -21,12 +19,16 @@ public class SingleLocationStrategy implements LocationStrategy {
 
     @Override
     public List<ShipmentItem> findShipmentItems(Map<UUID, Integer> requested) {
+        if (requested.isEmpty()) {
+            throw new IllegalArgumentException("Requested products must not be empty");
+        }
+
         List<Stock> stocks = stockRepository.findByProductIdInOrderByLocation_IdAsc(List.copyOf(requested.keySet()));
 
         return stocks.stream()
                 .collect(groupingBy(s -> s.getLocation().getId(), LinkedHashMap::new, toList()))
                 .values().stream()
-                .filter(locationStocks -> canFullfill(locationStocks, requested))
+                .filter(locationStocks -> canFulfill(locationStocks, requested))
                 .findFirst()
                 .map(locationStocks -> toShipmentItems(locationStocks, requested))
                 .orElseThrow(() -> new NoSuitableLocationException("No single location can fulfil the order: " + requested));
@@ -34,11 +36,11 @@ public class SingleLocationStrategy implements LocationStrategy {
 
     private List<ShipmentItem> toShipmentItems(List<Stock> locationStocks, Map<UUID, Integer> requested) {
         return locationStocks.stream()
-                .map(s -> new ShipmentItem(s.getLocation(), s.getProduct(), requested.get(s.getProduct().getId())))
+                .map(s -> new ShipmentItem(s, requested.get(s.getProduct().getId())))
                 .toList();
     }
 
-    private boolean canFullfill(List<Stock> locationStocks, Map<UUID, Integer> requested) {
+    private boolean canFulfill(List<Stock> locationStocks, Map<UUID, Integer> requested) {
         Map<UUID, Integer> available = locationStocks.stream()
                 .collect(toMap(s -> s.getProduct().getId(), Stock::getQuantity));
 

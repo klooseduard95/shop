@@ -21,6 +21,10 @@ public class MostAbundantStrategy implements LocationStrategy {
     
     @Override
     public List<ShipmentItem> findShipmentItems(Map<UUID, Integer> requested) {
+        if (requested.isEmpty()) {
+            throw new IllegalArgumentException("Requested products must not be empty");
+        }
+
         Map<UUID, Stock> richestStockByProduct = stockRepository
                 .findByProductIdInOrderByLocation_IdAsc(List.copyOf(requested.keySet())).stream()
                 .collect(toMap(
@@ -38,6 +42,6 @@ public class MostAbundantStrategy implements LocationStrategy {
             throw new NoSuitableLocationException(
                     "No location has enough stock of product " + productId + " (requested " + quantity + ")");
         }
-        return new ShipmentItem(richest.getLocation(), richest.getProduct(), quantity);
+        return new ShipmentItem(richest, quantity);
     }
 }
