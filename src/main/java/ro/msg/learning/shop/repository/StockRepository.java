@@ -5,10 +5,18 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 import ro.msg.learning.shop.model.*;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 
 @Repository
 public interface StockRepository extends JpaRepository<Stock, StockId> {
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    List<Stock> findByProductIdInOrderByLocation_IdAsc(Collection<UUID> productIds);
+    List<Stock> findByProductIdInAndQuantityGreaterThanEqualOrderByLocation_IdAsc(Collection<UUID> productIds, Integer quantity);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Stock> findFirstByProductIdOrderByQuantityDescLocation_IdAsc(UUID productId);
 }
