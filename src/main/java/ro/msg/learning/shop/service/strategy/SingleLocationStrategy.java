@@ -5,10 +5,7 @@ import ro.msg.learning.shop.exception.NoSuitableLocationException;
 import ro.msg.learning.shop.model.Stock;
 import ro.msg.learning.shop.repository.StockRepository;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static java.util.stream.Collectors.*;
 
@@ -23,7 +20,11 @@ public class SingleLocationStrategy implements LocationStrategy {
             throw new IllegalArgumentException("Requested products must not be empty");
         }
 
-        List<Stock> stocks = stockRepository.findByProductIdInOrderByLocation_IdAsc(List.copyOf(requested.keySet()));
+        Integer minRequestedQuantity = Collections.min(requested.values());
+        List<Stock> stocks = stockRepository.findByProductIdInAndQuantityGreaterThanEqualOrderByLocation_IdAsc(
+                List.copyOf(requested.keySet()),
+                minRequestedQuantity
+        );
 
         return stocks.stream()
                 .collect(groupingBy(s -> s.getLocation().getId(), LinkedHashMap::new, toList()))
