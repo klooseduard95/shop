@@ -10,6 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import ro.msg.learning.shop.dto.request.ProductRequest;
 import ro.msg.learning.shop.exception.GlobalExceptionHandler;
 import ro.msg.learning.shop.exception.ResourceNotFoundException;
@@ -167,13 +170,13 @@ class ProductControllerTest {
     @Test
     void handleValidation_whenDuplicateFieldErrors_keepsFirstMessage() {
         GlobalExceptionHandler handler = new GlobalExceptionHandler();
-        org.springframework.validation.BeanPropertyBindingResult bindingResult =
-                new org.springframework.validation.BeanPropertyBindingResult(new Object(), "productRequest");
-        bindingResult.addError(new org.springframework.validation.FieldError("productRequest", "name", "First error"));
-        bindingResult.addError(new org.springframework.validation.FieldError("productRequest", "name", "Second error"));
+        BeanPropertyBindingResult bindingResult =
+                new BeanPropertyBindingResult(new Object(), "productRequest");
+        bindingResult.addError(new FieldError("productRequest", "name", "First error"));
+        bindingResult.addError(new FieldError("productRequest", "name", "Second error"));
 
-        org.springframework.web.bind.MethodArgumentNotValidException ex =
-                new org.springframework.web.bind.MethodArgumentNotValidException(null, bindingResult);
+        MethodArgumentNotValidException ex =
+                new MethodArgumentNotValidException(null, bindingResult);
         var response = handler.handleValidation(ex);
 
         org.assertj.core.api.Assertions.assertThat(response.details()).containsEntry("name", "First error");

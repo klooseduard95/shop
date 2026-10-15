@@ -65,25 +65,11 @@ class OrderIntegrationTest {
 
     @Test
     void createOrder_whenStockIsSufficient_createsOrderAndDecreasesStock() throws Exception {
-        OrderCreateRequest request = OrderCreateRequest.builder()
-                .userId(USER_ANDREI)
-                .deliveryAddress(AddressRequest.builder()
-                        .country("România")
-                        .city("București")
-                        .county("București")
-                        .streetAddress("Strada Lipscani 25")
-                        .build())
-                .products(List.of(
-                        ProductQuantityRequest.builder()
-                                .productId(PRODUCT_ZACUSCA)
-                                .quantity(10)
-                                .build(),
-                        ProductQuantityRequest.builder()
-                                .productId(PRODUCT_MURATURI)
-                                .quantity(5)
-                                .build()
-                ))
-                .build();
+        OrderCreateRequest request = createOrderRequest(
+                USER_ANDREI,
+                productQuantity(PRODUCT_ZACUSCA, 10),
+                productQuantity(PRODUCT_MURATURI, 5)
+        );
 
         mockMvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -106,21 +92,10 @@ class OrderIntegrationTest {
 
     @Test
     void createOrder_whenStockIsMissing_returnsConflictAndRollsBack() throws Exception {
-        OrderCreateRequest request = OrderCreateRequest.builder()
-                .userId(USER_ANDREI)
-                .deliveryAddress(AddressRequest.builder()
-                        .country("România")
-                        .city("București")
-                        .county("București")
-                        .streetAddress("Strada Lipscani 25")
-                        .build())
-                .products(List.of(
-                        ProductQuantityRequest.builder()
-                                .productId(PRODUCT_ZACUSCA)
-                                .quantity(9999)
-                                .build()
-                ))
-                .build();
+        OrderCreateRequest request = createOrderRequest(
+                USER_ANDREI,
+                productQuantity(PRODUCT_ZACUSCA, 9999)
+        );
 
         mockMvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -138,21 +113,10 @@ class OrderIntegrationTest {
     @Test
     void createOrder_whenProductDoesNotExist_returnsNotFound() throws Exception {
         UUID unknownProductId = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff");
-        OrderCreateRequest request = OrderCreateRequest.builder()
-                .userId(USER_ANDREI)
-                .deliveryAddress(AddressRequest.builder()
-                        .country("România")
-                        .city("București")
-                        .county("București")
-                        .streetAddress("Strada Lipscani 25")
-                        .build())
-                .products(List.of(
-                        ProductQuantityRequest.builder()
-                                .productId(unknownProductId)
-                                .quantity(1)
-                                .build()
-                ))
-                .build();
+        OrderCreateRequest request = createOrderRequest(
+                USER_ANDREI,
+                productQuantity(unknownProductId, 1)
+        );
 
         mockMvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -164,21 +128,10 @@ class OrderIntegrationTest {
     @Test
     void createOrder_whenUserDoesNotExist_returnsNotFound() throws Exception {
         UUID unknownUserId = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff");
-        OrderCreateRequest request = OrderCreateRequest.builder()
-                .userId(unknownUserId)
-                .deliveryAddress(AddressRequest.builder()
-                        .country("România")
-                        .city("București")
-                        .county("București")
-                        .streetAddress("Strada Lipscani 25")
-                        .build())
-                .products(List.of(
-                        ProductQuantityRequest.builder()
-                                .productId(PRODUCT_ZACUSCA)
-                                .quantity(1)
-                                .build()
-                ))
-                .build();
+        OrderCreateRequest request = createOrderRequest(
+                unknownUserId,
+                productQuantity(PRODUCT_ZACUSCA, 1)
+        );
 
         mockMvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -208,5 +161,25 @@ class OrderIntegrationTest {
         mockMvc.perform(get("/api/stocks/export/{locationId}", unknownLocationId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Location not found with id: " + unknownLocationId));
+    }
+
+    private OrderCreateRequest createOrderRequest(UUID userId, ProductQuantityRequest... products) {
+        return OrderCreateRequest.builder()
+                .userId(userId)
+                .deliveryAddress(AddressRequest.builder()
+                        .country("România")
+                        .city("București")
+                        .county("București")
+                        .streetAddress("Strada Lipscani 25")
+                        .build())
+                .products(List.of(products))
+                .build();
+    }
+
+    private ProductQuantityRequest productQuantity(UUID productId, int quantity) {
+        return ProductQuantityRequest.builder()
+                .productId(productId)
+                .quantity(quantity)
+                .build();
     }
 }
