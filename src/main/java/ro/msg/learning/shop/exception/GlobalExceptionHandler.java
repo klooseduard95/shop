@@ -2,6 +2,8 @@ package ro.msg.learning.shop.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +40,18 @@ public class GlobalExceptionHandler {
                         (first, second) -> first));
         log.debug("Validation failed: fieldErrorCount={}", details.size());
         return new ErrorResponse("Validation failed", details);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleBadCredentials(BadCredentialsException ex) {
+        return ErrorResponse.of("Invalid username or password");
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleAccessDenied(AccessDeniedException ex) {
+        return ErrorResponse.of("Access denied");
     }
 
     @ExceptionHandler(Exception.class)

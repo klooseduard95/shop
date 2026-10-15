@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import ro.msg.learning.shop.model.Product;
 import ro.msg.learning.shop.model.ProductCategory;
 import ro.msg.learning.shop.repository.ProductCategoryRepository;
 import ro.msg.learning.shop.repository.ProductRepository;
+import ro.msg.learning.shop.repository.StockRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -34,6 +36,9 @@ class ProductServiceTest {
 
     @Mock
     private ProductCategoryRepository categoryRepository;
+
+    @Mock
+    private StockRepository stockRepository;
 
     @InjectMocks
     private ProductService productService;
@@ -167,7 +172,9 @@ class ProductServiceTest {
 
         productService.delete(productId);
 
-        verify(productRepository).delete(product);
+        InOrder deletionOrder = inOrder(stockRepository, productRepository);
+        deletionOrder.verify(stockRepository).deleteAllByProductId(productId);
+        deletionOrder.verify(productRepository).delete(product);
     }
 
     @Test
