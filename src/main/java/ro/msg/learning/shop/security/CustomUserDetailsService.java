@@ -11,7 +11,6 @@ import ro.msg.learning.shop.model.User;
 import ro.msg.learning.shop.repository.UserRepository;
 
 import java.util.Collections;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor

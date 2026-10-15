@@ -21,4 +21,5 @@ public interface StockRepository extends JpaRepository<Stock, StockId> {
     Optional<Stock> findFirstByProductIdOrderByQuantityDescLocation_IdAsc(UUID productId);
 
     List<Stock> findByLocationIdOrderByProduct_NameAscProduct_IdAsc(UUID locationId);
+    void deleteAllByProductId(UUID productId);
 }
