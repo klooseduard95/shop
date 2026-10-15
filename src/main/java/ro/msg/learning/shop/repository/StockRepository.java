@@ -19,4 +19,6 @@ public interface StockRepository extends JpaRepository<Stock, StockId> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Stock> findFirstByProductIdOrderByQuantityDescLocation_IdAsc(UUID productId);
+
+    List<Stock> findByLocationIdOrderByProduct_NameAscProduct_IdAsc(UUID locationId);
 }
