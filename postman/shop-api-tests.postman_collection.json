@@ -1,0 +1,192 @@
+{
+  "info": {
+    "name": "Online Shop API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "stockExportPath",
+      "value": "/api/stocks/export/e0000000-0000-0000-0000-000000000001"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Setup - Populate Database",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Database populated successfully', function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/api/test/populate"
+      }
+    },
+    {
+      "name": "1. Create Order Successfully",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Order response contains ID and userId', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.id).to.be.a('string');",
+              "    pm.expect(jsonData.userId).to.eql('a0000000-0000-0000-0000-000000000001');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"a0000000-0000-0000-0000-000000000001\",\n  \"deliveryAddress\": {\n    \"country\": \"România\",\n    \"city\": \"București\",\n    \"county\": \"București\",\n    \"streetAddress\": \"Strada Lipscani 25\"\n  },\n  \"products\": [\n    {\n      \"productId\": \"d0000000-0000-0000-0000-000000000001\",\n      \"quantity\": 5\n    }\n  ]\n}"
+        },
+        "url": "{{baseUrl}}/api/orders"
+      }
+    },
+    {
+      "name": "2. Export Stocks",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Response body is not empty', function () {",
+              "    pm.expect(pm.response.text().length).to.be.above(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "text/csv"
+          }
+        ],
+        "url": "{{baseUrl}}{{stockExportPath}}"
+      }
+    },
+    {
+      "name": "3. Fail to Create Order - Missing Stock",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 409 Conflict', function () {",
+              "    pm.response.to.have.status(409);",
+              "});",
+              "pm.test('Error message is present', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error).to.be.a('string');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"a0000000-0000-0000-0000-000000000001\",\n  \"deliveryAddress\": {\n    \"country\": \"România\",\n    \"city\": \"București\",\n    \"county\": \"București\",\n    \"streetAddress\": \"Strada Lipscani 25\"\n  },\n  \"products\": [\n    {\n      \"productId\": \"d0000000-0000-0000-0000-000000000001\",\n      \"quantity\": 5000\n    }\n  ]\n}"
+        },
+        "url": "{{baseUrl}}/api/orders"
+      }
+    },
+    {
+      "name": "4. Fail to Create Order - Unknown Product ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 404 Not Found', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "pm.test('Error message mentions missing product', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error).to.include('Products not found');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"a0000000-0000-0000-0000-000000000001\",\n  \"deliveryAddress\": {\n    \"country\": \"România\",\n    \"city\": \"București\",\n    \"county\": \"București\",\n    \"streetAddress\": \"Strada Lipscani 25\"\n  },\n  \"products\": [\n    {\n      \"productId\": \"ffffffff-ffff-ffff-ffff-ffffffffffff\",\n      \"quantity\": 1\n    }\n  ]\n}"
+        },
+        "url": "{{baseUrl}}/api/orders"
+      }
+    },
+    {
+      "name": "5. Teardown - Clear Database",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Database cleared successfully', function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/api/test/clear"
+      }
+    }
+  ]
+}
