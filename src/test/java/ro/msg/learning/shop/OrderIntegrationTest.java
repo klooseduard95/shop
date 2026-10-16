@@ -6,11 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import ro.msg.learning.shop.config.TestcontainersConfig;
 import ro.msg.learning.shop.dto.request.AddressRequest;
 import ro.msg.learning.shop.dto.request.OrderCreateRequest;
 import ro.msg.learning.shop.dto.request.ProductQuantityRequest;
@@ -30,9 +28,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-@Import(TestcontainersConfig.class)
 class OrderIntegrationTest {
 
     @Autowired

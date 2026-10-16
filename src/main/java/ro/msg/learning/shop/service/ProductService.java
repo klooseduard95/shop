@@ -11,6 +11,7 @@ import ro.msg.learning.shop.model.Product;
 import ro.msg.learning.shop.model.ProductCategory;
 import ro.msg.learning.shop.repository.ProductCategoryRepository;
 import ro.msg.learning.shop.repository.ProductRepository;
+import ro.msg.learning.shop.repository.StockRepository;
 
 import java.util.UUID;
 
@@ -22,6 +23,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductCategoryRepository categoryRepository;
+    private final StockRepository stockRepository;
 
     public Page<Product> findAll(Pageable pageable) {
         return productRepository.findAll(pageable);
@@ -56,7 +58,9 @@ public class ProductService {
 
     @Transactional
     public void delete(UUID id) {
-        productRepository.delete(getProductOrThrow(id));
+        Product product = getProductOrThrow(id);
+        stockRepository.deleteAllByProductId(id);
+        productRepository.delete(product);
         log.info("Product deleted: productId={}", id);
     }
 
