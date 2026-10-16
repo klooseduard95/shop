@@ -3,9 +3,9 @@
 
 -- Users ---------------------------------------------------------------
 INSERT INTO users (id, first_name, last_name, username, password, email_address, role) VALUES
-                                                                                           ('a0000000-0000-0000-0000-000000000001', 'Andrei', 'Popescu',    'andrei.popescu', 'changeme', 'andrei.popescu@example.com', 'CUSTOMER'),
-                                                                                           ('a0000000-0000-0000-0000-000000000002', 'Maria',  'Ionescu',    'maria.ionescu',  'changeme', 'maria.ionescu@example.com',  'CUSTOMER'),
-                                                                                           ('a0000000-0000-0000-0000-000000000003', 'Elena',  'Dumitrescu', 'admin',          'changeme', 'admin@example.com',          'ADMIN');
+                                                                                           ('a0000000-0000-0000-0000-000000000001', 'Andrei', 'Popescu',    'andrei.popescu', '$2a$12$XYpi7kSotOMiEc9e6bLph.IzTHuL.NlwJ/pu7xjrDJBRqi/TnbOLu', 'andrei.popescu@example.com', 'CUSTOMER'),
+                                                                                           ('a0000000-0000-0000-0000-000000000002', 'Maria',  'Ionescu',    'maria.ionescu',  '$2a$12$XYpi7kSotOMiEc9e6bLph.IzTHuL.NlwJ/pu7xjrDJBRqi/TnbOLu', 'maria.ionescu@example.com',  'CUSTOMER'),
+                                                                                           ('a0000000-0000-0000-0000-000000000003', 'Elena',  'Dumitrescu', 'admin',          '$2a$12$XYpi7kSotOMiEc9e6bLph.IzTHuL.NlwJ/pu7xjrDJBRqi/TnbOLu', 'admin@example.com',          'ADMIN');
 
 -- Addresses (customers first, then warehouses) -------------------------
 INSERT INTO addresses (id, user_id, country, city, county, street_address) VALUES

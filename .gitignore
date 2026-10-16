@@ -62,3 +62,7 @@ Desktop.ini
 *.p12
 *.jks
 secrets/
+
+
+# Copilot
+.github-copilot/
