@@ -56,6 +56,15 @@ class SchedulingConfigTest {
     }
 
     @Test
+    void clockDefaultsToTheSystemZoneWhenConfiguredZoneIsNull() {
+        ShopProperties properties = new ShopProperties();
+        properties.setTimeZone(null);
+
+        assertThat(properties.resolveZoneId()).isEqualTo(ZoneId.systemDefault());
+        assertThat(new ClockConfig().clock(properties).getZone()).isEqualTo(ZoneId.systemDefault());
+    }
+
+    @Test
     void clockUsesTheConfiguredZoneWhenOneIsSet() {
         ShopProperties properties = new ShopProperties();
         properties.setTimeZone("Europe/Bucharest");
