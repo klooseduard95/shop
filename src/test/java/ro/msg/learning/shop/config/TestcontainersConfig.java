@@ -3,20 +3,30 @@ package ro.msg.learning.shop.config;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @TestConfiguration(proxyBeanMethods = false)
-@Profile("test")
 public class TestcontainersConfig {
 
-    private static final PostgreSQLContainer POSTGRES =
-            new PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"));
+    public static final String IMAGE_PROPERTY = "testcontainers.postgres.image";
 
-    @Bean
+    private static final String DEFAULT_IMAGE = "postgres:16-alpine";
+
+    private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer(
+            DockerImageName.parse(System.getProperty(IMAGE_PROPERTY, DEFAULT_IMAGE)));
+
+    static {
+        POSTGRES.start();
+    }
+
+    public static PostgreSQLContainer container() {
+        return POSTGRES;
+    }
+
+    @Bean(destroyMethod = "")
     @ServiceConnection
-    public PostgreSQLContainer postgresContainer() {
+    PostgreSQLContainer postgresContainer() {
         return POSTGRES;
     }
 }
