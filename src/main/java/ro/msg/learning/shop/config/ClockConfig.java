@@ -10,7 +10,7 @@ import java.time.Clock;
 public class ClockConfig {
 
     @Bean
-    public Clock clock(ShopProperties shopProperties) {
-        return Clock.system(shopProperties.resolveZoneId());
+    public Clock clock(TimeZoneResolver timeZoneResolver) {
+        return Clock.system(timeZoneResolver.resolve());
     }
 }

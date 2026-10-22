@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.time.ZoneId;
 
 @Getter
 @Setter
@@ -16,10 +15,6 @@ public class ShopProperties {
     private String timeZone = "";
 
     private final Revenue revenue = new Revenue();
-
-    public ZoneId resolveZoneId() {
-        return timeZone == null || timeZone.isBlank() ? ZoneId.systemDefault() : ZoneId.of(timeZone);
-    }
 
     @Getter
     @Setter

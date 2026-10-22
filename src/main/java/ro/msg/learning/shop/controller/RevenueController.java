@@ -5,7 +5,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ro.msg.learning.shop.dto.response.RevenueResponse;
-import ro.msg.learning.shop.exception.InvalidReportDateException;
 import ro.msg.learning.shop.mapper.RevenueMapper;
 import ro.msg.learning.shop.model.Revenue;
 import ro.msg.learning.shop.service.RevenueService;
@@ -24,13 +23,12 @@ public class RevenueController {
     @GetMapping
     public List<RevenueResponse> getRevenues(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        rejectFutureDate(date);
         return toResponses(revenueService.findByDate(date));
     }
 
     @GetMapping(value = "/export", produces = "text/csv")
-    public String export(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        rejectFutureDate(date);
+    public String export(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return revenueService.exportCsv(date);
     }
 
@@ -43,11 +41,5 @@ public class RevenueController {
 
     private List<RevenueResponse> toResponses(List<Revenue> revenues) {
         return revenues.stream().map(revenueMapper::toResponse).toList();
-    }
-
-    private void rejectFutureDate(LocalDate date) {
-        if (date.isAfter(revenueService.yesterday().plusDays(1))) {
-            throw new InvalidReportDateException("Date must not be in the future, but was: " + date);
-        }
     }
 }

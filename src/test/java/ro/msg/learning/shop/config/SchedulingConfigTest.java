@@ -21,7 +21,11 @@ class SchedulingConfigTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(TaskSchedulingAutoConfiguration.class))
-            .withUserConfiguration(SchedulingConfig.class, ClockConfig.class, RevenueReportJob.class)
+            .withUserConfiguration(
+                    SchedulingConfig.class,
+                    ClockConfig.class,
+                    TimeZoneResolver.class,
+                    RevenueReportJob.class)
             .withBean(RevenueService.class, () -> mock(RevenueService.class))
             .withPropertyValues("shop.revenue.cron=" + CRON);
 
@@ -50,28 +54,31 @@ class SchedulingConfigTest {
     @Test
     void clockDefaultsToTheSystemZone() {
         ShopProperties properties = new ShopProperties();
+        TimeZoneResolver timeZoneResolver = new TimeZoneResolver(properties);
 
-        assertThat(properties.resolveZoneId()).isEqualTo(ZoneId.systemDefault());
-        assertThat(new ClockConfig().clock(properties).getZone()).isEqualTo(ZoneId.systemDefault());
+        assertThat(timeZoneResolver.resolve()).isEqualTo(ZoneId.systemDefault());
+        assertThat(new ClockConfig().clock(timeZoneResolver).getZone()).isEqualTo(ZoneId.systemDefault());
     }
 
     @Test
     void clockDefaultsToTheSystemZoneWhenConfiguredZoneIsNull() {
         ShopProperties properties = new ShopProperties();
         properties.setTimeZone(null);
+        TimeZoneResolver timeZoneResolver = new TimeZoneResolver(properties);
 
-        assertThat(properties.resolveZoneId()).isEqualTo(ZoneId.systemDefault());
-        assertThat(new ClockConfig().clock(properties).getZone()).isEqualTo(ZoneId.systemDefault());
+        assertThat(timeZoneResolver.resolve()).isEqualTo(ZoneId.systemDefault());
+        assertThat(new ClockConfig().clock(timeZoneResolver).getZone()).isEqualTo(ZoneId.systemDefault());
     }
 
     @Test
     void clockUsesTheConfiguredZoneWhenOneIsSet() {
         ShopProperties properties = new ShopProperties();
         properties.setTimeZone("Europe/Bucharest");
+        TimeZoneResolver timeZoneResolver = new TimeZoneResolver(properties);
 
-        Clock clock = new ClockConfig().clock(properties);
+        Clock clock = new ClockConfig().clock(timeZoneResolver);
 
         assertThat(clock.getZone()).isEqualTo(ZoneId.of("Europe/Bucharest"));
-        assertThat(properties.resolveZoneId()).isEqualTo(ZoneId.of("Europe/Bucharest"));
+        assertThat(timeZoneResolver.resolve()).isEqualTo(ZoneId.of("Europe/Bucharest"));
     }
 }

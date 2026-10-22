@@ -72,7 +72,16 @@ public class RevenueService {
 
     @Transactional(readOnly = true)
     public List<Revenue> findByDate(LocalDate date) {
+        requireNotFutureDate(date);
         return revenueRepository.findByDateOrderByLocation_NameAscLocation_IdAsc(date);
+    }
+
+    private void requireNotFutureDate(LocalDate date) {
+        if (date.isAfter(LocalDate.now(clock))) {
+            throw new InvalidReportDateException(
+                    "Date must not be in the future, but was: " + date
+            );
+        }
     }
 
     @Transactional(readOnly = true)

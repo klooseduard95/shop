@@ -1,6 +1,5 @@
 package ro.msg.learning.shop.controller;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -39,11 +38,6 @@ class RevenueControllerTest {
     @MockitoBean
     private RevenueService revenueService;
 
-    @BeforeEach
-    void setUp() {
-        when(revenueService.yesterday()).thenReturn(REPORT_DATE);
-    }
-
     @Test
     void getRevenues_returnsTheStoredReport() throws Exception {
         when(revenueService.findByDate(REPORT_DATE)).thenReturn(List.of(revenue("Depozit București", "29.00")));
@@ -81,12 +75,15 @@ class RevenueControllerTest {
     }
 
     @Test
-    void getRevenues_whenDateIsInTheFuture_returnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/revenues").param("date", "2024-05-23"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").exists());
+    void getRevenues_whenServiceRejectsFutureDate_returnsBadRequest() throws Exception {
+        LocalDate futureDate = LocalDate.of(2024, 5, 23);
+        String errorMessage = "Date must not be in the future, but was: " + futureDate;
+        when(revenueService.findByDate(futureDate))
+                .thenThrow(new InvalidReportDateException(errorMessage));
 
-        verify(revenueService, never()).findByDate(any());
+        mockMvc.perform(get("/api/revenues").param("date", futureDate.toString()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value(errorMessage));
     }
 
     @Test

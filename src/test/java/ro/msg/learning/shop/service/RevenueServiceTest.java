@@ -122,6 +122,27 @@ class RevenueServiceTest {
         assertThat(csv).contains(",\"Depozit \"\"Nord\"\"\",2024-05-20,29.00");
     }
 
+    @Test
+    void findByDate_whenDateIsInTheFuture_isRejected() {
+        LocalDate futureDate = TODAY.plusDays(1);
+
+        assertThatThrownBy(() -> revenueService.findByDate(futureDate))
+                .isInstanceOf(InvalidReportDateException.class)
+                .hasMessage("Date must not be in the future, but was: " + futureDate);
+
+        verifyNoInteractions(revenueRepository);
+    }
+
+    @Test
+    void exportCsv_whenDateIsInTheFuture_isRejected() {
+        LocalDate futureDate = TODAY.plusDays(1);
+
+        assertThatThrownBy(() -> revenueService.exportCsv(futureDate))
+                .isInstanceOf(InvalidReportDateException.class);
+
+        verifyNoInteractions(revenueRepository);
+    }
+
     private Revenue revenue(String locationName, String sum) {
         Location location = location(locationName);
         return Revenue.builder()
