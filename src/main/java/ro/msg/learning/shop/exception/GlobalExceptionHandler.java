@@ -6,7 +6,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.Map;
 import java.util.Objects;
@@ -40,6 +42,27 @@ public class GlobalExceptionHandler {
                         (first, second) -> first));
         log.debug("Validation failed: fieldErrorCount={}", details.size());
         return new ErrorResponse("Validation failed", details);
+    }
+
+    @ExceptionHandler(InvalidReportDateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidReportDate(InvalidReportDateException ex) {
+        log.warn("Invalid report date: {}", ex.getMessage());
+        return ErrorResponse.of(ex.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        log.debug("Unparsable request parameter: {}", ex.getName());
+        return ErrorResponse.of("Invalid value for parameter '" + ex.getName() + "'");
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleMissingParameter(MissingServletRequestParameterException ex) {
+        log.debug("Missing request parameter: {}", ex.getParameterName());
+        return ErrorResponse.of("Missing required parameter '" + ex.getParameterName() + "'");
     }
 
     @ExceptionHandler(BadCredentialsException.class)
